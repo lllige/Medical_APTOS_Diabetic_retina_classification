@@ -3,6 +3,7 @@
 **模型**：`tf_efficientnetv2_s`（参数量 20.8M）  
 **设备**：CUDA  
 **数据集规模**：Train 2930 | Val 366 | Test 366  
+**数据集链接**：https://www.kaggle.com/datasets/mariaherrerot/aptos2019/data
 
 ### 1. 类别分布
 **训练集**：  
@@ -13,10 +14,10 @@
 
 ### 2. 训练概况
 - 共训练 **44 个 epoch**  
-- **早停**于 epoch 44（连续 7 个 epoch 验证集无改善）  
+- **早停**于 epoch 44
 - **最佳模型**：epoch 37，验证集 Kappa = **0.9189**  
 
-### 3. 验证集最终性能（Best checkpoint）
+### 3. 验证集性能（Best checkpoint）
 - **Accuracy**：83.88%  
 - **Quadratic Weighted Kappa**：**0.9189**  
 
