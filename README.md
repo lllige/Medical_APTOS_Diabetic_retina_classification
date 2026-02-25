@@ -1,4 +1,4 @@
-# Medical_AI
+# Medical_APTOS_Diabetic_retina_classification
 
 **模型**：`tf_efficientnetv2_s`（参数量 20.8M）  
 **设备**：CUDA  
