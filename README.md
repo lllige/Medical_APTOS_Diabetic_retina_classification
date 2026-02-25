@@ -1,7 +1,7 @@
 # Medical_APTOS_Diabetic_retina_classification
 
 **模型**：`tf_efficientnetv2_s`（参数量 20.8M）  
-**设备**：CUDA  
+**设备**：CUDA GPU3060
 **数据集规模**：Train 2930 | Val 366 | Test 366  
 **数据集链接**：https://www.kaggle.com/datasets/mariaherrerot/aptos2019/data
 
@@ -14,10 +14,9 @@
 
 ### 2. 训练概况
 - 共训练 **44 个 epoch**  
-- **早停**于 epoch 44
 - **最佳模型**：epoch 37，验证集 Kappa = **0.9189**  
 
-### 3. 验证集性能（Best checkpoint）
+### 3. 验证集性能（best_model.pth）
 - **Accuracy**：83.88%  
 - **Quadratic Weighted Kappa**：**0.9189**  
 
@@ -43,7 +42,7 @@
 | **Severe**         | 0     | 0    | 6        | 11     | 5                |
 | **Proliferative DR**| 0    | 0    | 6        | 3      | 19               |
 
-### 4. 测试集最终性能
+### 4. 测试集结果
 - **Accuracy**：**84.43%**  
 - **Quadratic Weighted Kappa**：**0.9163**  
 
