@@ -2,6 +2,7 @@
 
 **模型**：`tf_efficientnetv2_s`（参数量 20.8M）  
 **设备**：CUDA GPU3060
+
 **数据集规模**：Train 2930 | Val 366 | Test 366  
 **数据集链接**：https://www.kaggle.com/datasets/mariaherrerot/aptos2019/data
 
