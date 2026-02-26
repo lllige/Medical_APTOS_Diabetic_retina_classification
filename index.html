@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>糖尿病视网膜病变诊断系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #080c10;
+    --surface:    #0d1117;
+    --surface2:   #161b22;
+    --border:     #21262d;
+    --accent:     #58a6ff;
+    --accent2:    #1f6feb;
+    --text:       #e6edf3;
+    --text-muted: #8b949e;
+    --green:      #22c55e;
+    --yellow:     #f59e0b;
+    --orange:     #f97316;
+    --red:        #ef4444;
+    --lime:       #84cc16;
+    --glow:       0 0 40px rgba(88,166,255,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── 背景网格 ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── 顶部光晕 ── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(88,166,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative; z-index: 10;
+    padding: 32px 48px 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(88,166,255,0.3);
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .header-text p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .badge {
+    margin-left: auto;
+    padding: 4px 12px;
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.25);
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Main Layout ── */
+  main {
+    position: relative; z-index: 10;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── Panel base ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+  }
+
+  .panel-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .panel-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* ── Upload Zone ── */
+  .upload-zone {
+    padding: 32px 24px;
+  }
+
+  .drop-area {
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    background: rgba(88,166,255,0.02);
+  }
+
+  .drop-area:hover, .drop-area.dragging {
+    border-color: var(--accent);
+    background: rgba(88,166,255,0.06);
+    transform: translateY(-1px);
+  }
+
+  .drop-area.dragging {
+    box-shadow: 0 0 30px rgba(88,166,255,0.15);
+  }
+
+  .drop-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 16px;
+    background: rgba(88,166,255,0.08);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    transition: transform 0.25s ease;
+  }
+
+  .drop-area:hover .drop-icon { transform: scale(1.1); }
+
+  .drop-text {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .drop-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  #fileInput { display: none; }
+
+  /* ── Preview ── */
+  .preview-container {
+    margin-top: 20px;
+    display: none;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 1;
+    border: 1px solid var(--border);
+  }
+
+  .preview-container.visible { display: block; }
+
+  #previewImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: filter 0.3s ease;
+  }
+
+  #previewImg.loading { filter: blur(4px) brightness(0.5); }
+
+  .preview-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .preview-overlay.visible { opacity: 1; }
+
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid rgba(88,166,255,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Analyze Button ── */
+  #analyzeBtn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: none;
+    text-transform: uppercase;
+  }
+
+  #analyzeBtn.visible { display: block; }
+  #analyzeBtn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(88,166,255,0.3); }
+  #analyzeBtn:active { transform: translateY(0); }
+  #analyzeBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── Results Panel ── */
+  .results-body {
+    padding: 24px;
+  }
+
+  /* 空态 */
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  .empty-eye {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+
+  .empty-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* 诊断结果 */
+  .diagnosis-result { display: none; }
+  .diagnosis-result.visible { display: block; }
+
+  /* 主诊断卡 */
+  .main-diagnosis {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid;
+    transition: all 0.4s ease;
+  }
+
+  .main-diagnosis::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0.06;
+  }
+
+  .diagnosis-level {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    opacity: 0.7;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .diagnosis-name {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .diagnosis-cn {
+    font-size: 14px;
+    opacity: 0.75;
+    font-weight: 300;
+  }
+
+  .diagnosis-prob {
+    position: absolute;
+    right: 20px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+
+  /* 概率条 */
+  .prob-section h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .prob-item {
+    margin-bottom: 12px;
+    animation: slideIn 0.4s ease both;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .prob-item:nth-child(1) { animation-delay: 0.05s; }
+  .prob-item:nth-child(2) { animation-delay: 0.10s; }
+  .prob-item:nth-child(3) { animation-delay: 0.15s; }
+  .prob-item:nth-child(4) { animation-delay: 0.20s; }
+  .prob-item:nth-child(5) { animation-delay: 0.25s; }
+
+  .prob-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .prob-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+  }
+
+  .prob-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .prob-cn {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-left: 4px;
+  }
+
+  .prob-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 48px;
+    text-align: right;
+  }
+
+  .prob-bar-bg {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0;
+  }
+
+  .prob-item.is-top .prob-label { color: var(--text); font-weight: 500; }
+  .prob-item.is-top .prob-val   { color: var(--text); font-weight: 700; }
+
+  /* 分割线 */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* Footer info */
+  .info-row {
+    display: flex; gap: 12px;
+    margin-top: 20px;
+  }
+
+  .info-chip {
+    padding: 6px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── 错误提示 ── */
+  .error-toast {
+    position: fixed;
+    bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #2d1515;
+    border: 1px solid #7f1d1d;
+    color: #fca5a5;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .error-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── 响应式 ── */
+  @media (max-width: 768px) {
+    main { grid-template-columns: 1fr; padding: 24px 16px 60px; }
+    header { padding: 24px 16px 0; }
+    .badge { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">👁</div>
+  <div class="header-text">
+    <h1>DR · Diagnosis</h1>
+    <p>糖尿病视网膜病变智能诊断系统</p>
+  </div>
+  <div class="badge">EfficientNet-V2</div>
+</header>
+
+<main>
+  <!-- 左栏：上传 -->
+  <div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot"></div>
+        <span class="panel-title">上传眼底图像</span>
+      </div>
+      <div class="upload-zone">
+        <div class="drop-area" id="dropArea">
+          <div class="drop-icon">🔬</div>
+          <div class="drop-text">拖拽图像到此处，或点击上传</div>
+          <div class="drop-sub">支持 PNG / JPG / JPEG</div>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+          <img id="previewImg" src="" alt="眼底图像预览">
+          <div class="preview-overlay" id="previewOverlay">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <button id="analyzeBtn">⚡ 开始分析</button>
+      </div>
+    </div>
+
+    <!-- 等级说明 -->
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#8b949e;box-shadow:none;"></div>
+        <span class="panel-title">分级说明</span>
+      </div>
+      <div style="padding:16px 20px;">
+        <div style="display:grid;gap:8px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:var(--surface2);" class="grade-item">
+            <span style="width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 6px #22c55e;"></span>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#8b949e;min-width:16px;">0</span>
+            <span style="font-size:13px;">No DR</span>
+            <span style="color:#8b949e;font-size:12px;margin-left:auto;">无病变</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:var(--surface2);" class="grade-item">
+            <span style="width:10px;height:10px;border-radius:50%;background:#84cc16;flex-shrink:0;box-shadow:0 0 6px #84cc16;"></span>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#8b949e;min-width:16px;">1</span>
+            <span style="font-size:13px;">Mild DR</span>
+            <span style="color:#8b949e;font-size:12px;margin-left:auto;">轻度</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:var(--surface2);" class="grade-item">
+            <span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0;box-shadow:0 0 6px #f59e0b;"></span>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#8b949e;min-width:16px;">2</span>
+            <span style="font-size:13px;">Moderate DR</span>
+            <span style="color:#8b949e;font-size:12px;margin-left:auto;">中度</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:var(--surface2);" class="grade-item">
+            <span style="width:10px;height:10px;border-radius:50%;background:#f97316;flex-shrink:0;box-shadow:0 0 6px #f97316;"></span>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#8b949e;min-width:16px;">3</span>
+            <span style="font-size:13px;">Severe DR</span>
+            <span style="color:#8b949e;font-size:12px;margin-left:auto;">重度</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:var(--surface2);" class="grade-item">
+            <span style="width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0;box-shadow:0 0 6px #ef4444;"></span>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#8b949e;min-width:16px;">4</span>
+            <span style="font-size:13px;">Proliferative DR</span>
+            <span style="color:#8b949e;font-size:12px;margin-left:auto;">增殖性</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右栏：结果 -->
+  <div class="panel" id="resultsPanel">
+    <div class="panel-header">
+      <div class="panel-dot" style="background:#8b949e;box-shadow:none;" id="resultDot"></div>
+      <span class="panel-title" id="resultTitle">诊断结果</span>
+    </div>
+    <div class="results-body">
+      <!-- 空态 -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-eye">👁️</div>
+        <div class="empty-text">
+          请在左侧上传一张眼底图像<br>
+          模型将自动分析并给出 0~4 级诊断结果
+        </div>
+      </div>
+
+      <!-- 结果 -->
+      <div class="diagnosis-result" id="diagnosisResult">
+        <!-- 主诊断卡 -->
+        <div class="main-diagnosis" id="mainDiagnosis">
+          <div class="diagnosis-level" id="diagLevel">GRADE —</div>
+          <div class="diagnosis-name" id="diagName">—</div>
+          <div class="diagnosis-cn"   id="diagCn">—</div>
+          <div class="diagnosis-prob" id="diagProb">—</div>
+        </div>
+
+        <!-- 概率分布 -->
+        <div class="prob-section">
+          <h3>各级别置信度分布</h3>
+          <div id="probList"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="info-row">
+          <div class="info-chip" id="modelChip">MODEL: EfficientNet-V2-S</div>
+          <div class="info-chip" id="timeChip">TIME: —</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 错误提示 -->
+<div class="error-toast" id="errorToast"></div>
+
+<script>
+const API_URL = 'http://localhost:5000/predict';
+
+const dropArea       = document.getElementById('dropArea');
+const fileInput      = document.getElementById('fileInput');
+const previewContainer = document.getElementById('previewContainer');
+const previewImg     = document.getElementById('previewImg');
+const previewOverlay = document.getElementById('previewOverlay');
+const analyzeBtn     = document.getElementById('analyzeBtn');
+const emptyState     = document.getElementById('emptyState');
+const diagnosisResult = document.getElementById('diagnosisResult');
+const mainDiagnosis  = document.getElementById('mainDiagnosis');
+const diagLevel      = document.getElementById('diagLevel');
+const diagName       = document.getElementById('diagName');
+const diagCn         = document.getElementById('diagCn');
+const diagProb       = document.getElementById('diagProb');
+const probList       = document.getElementById('probList');
+const resultDot      = document.getElementById('resultDot');
+const resultTitle    = document.getElementById('resultTitle');
+const timeChip       = document.getElementById('timeChip');
+const errorToast     = document.getElementById('errorToast');
+
+let currentFile = null;
+
+// ── 拖拽 ──
+dropArea.addEventListener('click', () => fileInput.click());
+dropArea.addEventListener('dragover',  e => { e.preventDefault(); dropArea.classList.add('dragging'); });
+dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragging'));
+dropArea.addEventListener('drop', e => {
+  e.preventDefault();
+  dropArea.classList.remove('dragging');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleFile(file);
+  else showError('请上传图片文件（PNG/JPG/JPEG）');
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+// ── 处理文件 ──
+function handleFile(file) {
+  currentFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    previewImg.src = e.target.result;
+    previewContainer.classList.add('visible');
+    analyzeBtn.classList.add('visible');
+
+    // 重置结果区
+    diagnosisResult.classList.remove('visible');
+    emptyState.style.display = 'block';
+    resultDot.style.background = '#8b949e';
+    resultDot.style.boxShadow = 'none';
+    resultTitle.textContent = '诊断结果';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── 分析按钮 ──
+analyzeBtn.addEventListener('click', () => runAnalysis());
+
+async function runAnalysis() {
+  if (!currentFile) return;
+
+  // UI: 加载态
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = '分析中...';
+  previewImg.classList.add('loading');
+  previewOverlay.classList.add('visible');
+  diagnosisResult.classList.remove('visible');
+  emptyState.style.display = 'none';
+
+  const t0 = Date.now();
+  try {
+    const formData = new FormData();
+    formData.append('file', currentFile);
+
+    const resp = await fetch(API_URL, { method: 'POST', body: formData });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    const elapsed = Date.now() - t0;
+    renderResult(data, elapsed);
+
+  } catch (err) {
+    showError('连接后端失败，请确认 app.py 已启动（python app.py）');
+    emptyState.style.display = 'block';
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = '⚡ 重新分析';
+    previewImg.classList.remove('loading');
+    previewOverlay.classList.remove('visible');
+  }
+}
+
+// ── 渲染结果 ──
+function renderResult(data, elapsed) {
+  const topProb = data.probabilities[data.prediction].prob;
+
+  // 主诊断卡
+  mainDiagnosis.style.color      = data.color;
+  mainDiagnosis.style.borderColor = data.color + '40';
+  diagLevel.textContent = `GRADE ${data.prediction}`;
+  diagName.textContent  = data.class_name;
+  diagCn.textContent    = data.class_cn;
+  diagProb.textContent  = topProb.toFixed(1) + '%';
+
+  // 顶部 dot
+  resultDot.style.background  = data.color;
+  resultDot.style.boxShadow   = `0 0 8px ${data.color}`;
+  resultTitle.textContent = `${data.class_name} · 诊断结果`;
+
+  // 概率列表
+  probList.innerHTML = '';
+  // 按概率降序排列
+  const sorted = [...data.probabilities].sort((a, b) => b.prob - a.prob);
+  data.probabilities.forEach((item, i) => {
+    const isTop = item.level === data.prediction;
+    const div = document.createElement('div');
+    div.className = 'prob-item' + (isTop ? ' is-top' : '');
+    div.style.animationDelay = `${i * 0.05}s`;
+    div.innerHTML = `
+      <div class="prob-row">
+        <div class="prob-label">
+          <span class="prob-dot" style="background:${item.color};box-shadow:0 0 5px ${item.color}${isTop?'':'44'};"></span>
+          <span>${item.name}</span>
+          <span class="prob-cn">${item.cn}</span>
+        </div>
+        <div class="prob-val">${item.prob.toFixed(2)}%</div>
+      </div>
+      <div class="prob-bar-bg">
+        <div class="prob-bar-fill" style="background:${item.color}${isTop?'':'88'};" data-width="${item.prob}"></div>
+      </div>
+    `;
+    probList.appendChild(div);
+  });
+
+  // 动画：等 DOM 渲染完再设宽度
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.prob-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width + '%';
+      });
+    });
+  });
+
+  timeChip.textContent = `TIME: ${elapsed}ms`;
+
+  emptyState.style.display = 'none';
+  diagnosisResult.classList.add('visible');
+}
+
+// ── 错误提示 ──
+function showError(msg) {
+  errorToast.textContent = '⚠ ' + msg;
+  errorToast.classList.add('show');
+  setTimeout(() => errorToast.classList.remove('show'), 4000);
+}
+</script>
+</body>
+</html>
